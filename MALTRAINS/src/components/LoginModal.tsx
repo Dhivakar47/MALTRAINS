@@ -309,7 +309,7 @@ export const LoginModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 overflow-auto bg-[#08080a]">
+    <div className="min-h-screen flex items-center justify-center z-50 bg-[#08080a] relative py-8 md:py-16">
       {/* --- MINIMALIST PREMIUM BACKGROUND --- */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Animated Metro Lines */}
@@ -338,10 +338,10 @@ export const LoginModal = () => {
               </div>
               <h1 className="text-3xl font-black text-white tracking-widest uppercase">{t('login.title')}</h1>
             </div>
-            <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+            <h2 className="text-3xl lg:text-5xl font-bold text-white leading-tight">
               {t('login.description.title')}
             </h2>
-            <p className="text-lg text-white/40 font-light leading-relaxed max-w-md">
+            <p className="text-base lg:text-lg text-white/40 font-light leading-relaxed max-w-md">
               {t('login.description.p1')}
             </p>
           </div>
@@ -354,7 +354,7 @@ export const LoginModal = () => {
               { icon: Users, key: 'staff' }
             ].map((feature) => (
               <div key={feature.key} className="flex items-start gap-3 group">
-                <feature.icon className="w-5 h-5 text-primary/60 mt-0.5 group-hover:text-primary transition-colors" />
+                <feature.icon className="w-5 h-5 text-primary/60 mt-0.5 shrink-0 group-hover:text-primary transition-colors" />
                 <span className="text-sm font-medium text-white/60 group-hover:text-white transition-colors">
                   {t(`login.description.features.${feature.key}`)}
                 </span>
@@ -370,16 +370,16 @@ export const LoginModal = () => {
         {/* --- LOGIN PORTAL (Impressive Minimalist Card) --- */}
         <div className="w-full lg:w-[420px] animate-in fade-in zoom-in-95 duration-1000 delay-200">
           <Card className="border-white/5 bg-white/[0.03] backdrop-blur-3xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden rounded-[32px]">
-            <CardHeader className="pt-10 pb-2 px-10">
+            <CardHeader className="pt-8 pb-4 px-6 md:px-10">
               <div className="flex items-center gap-2 text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-4 bg-white/5 w-fit px-3 py-1 rounded-full border border-white/5">
-                <Shield className="w-3 h-3 text-primary/60" />
+                <Shield className="w-3 h-3 shrink-0 text-primary/60" />
                 {t('login.securedTerminal')}
               </div>
-              <h3 className="text-2xl font-bold text-white">{t('login.systemAccess')}</h3>
-              <p className="text-sm text-white/30 font-light">{t('login.authorizedOnly')}</p>
+              <h3 className="text-xl md:text-2xl font-bold text-white">{t('login.systemAccess')}</h3>
+              <p className="text-xs md:text-sm text-white/30 font-light">{t('login.authorizedOnly')}</p>
             </CardHeader>
 
-            <CardContent className="p-10 pt-6">
+            <CardContent className="p-6 md:p-10 pt-2 md:pt-6">
               {showForgotPassword ? (
                 <form onSubmit={handleForgotPassword} className="space-y-6">
                   <div className="space-y-2">
@@ -439,22 +439,22 @@ export const LoginModal = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-2">
+                  <div className="space-y-3 pt-2">
                     <Label className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] ml-1">{t('login.operationsId')}</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-white/10 group-focus-within:text-primary transition-colors" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
                       <Input 
                         type="email" 
                         placeholder={t('login.emailPlaceholder')} 
                         value={email} 
                         onChange={(e) => setEmail(e.target.value)} 
-                        className="h-12 pl-8 bg-transparent border-0 border-b border-white/10 text-white placeholder:text-white/15 focus-visible:ring-0 focus-visible:border-primary transition-all rounded-none" 
+                        className="h-12 pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all rounded-xl" 
                         required 
                       />
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between ml-1">
                       <Label className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">{t('login.accessProtocol')}</Label>
                       <button 
@@ -466,13 +466,13 @@ export const LoginModal = () => {
                       </button>
                     </div>
                     <div className="relative group">
-                      <Lock className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-white/10 group-focus-within:text-primary transition-colors" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-primary transition-colors" />
                       <Input 
                         type="password" 
                         placeholder={t('login.passwordPlaceholder')} 
                         value={password} 
                         onChange={(e) => setPassword(e.target.value)} 
-                        className="h-12 pl-8 bg-transparent border-0 border-b border-white/10 text-white placeholder:text-white/15 focus-visible:ring-0 focus-visible:border-primary transition-all rounded-none" 
+                        className="h-12 pl-10 bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all rounded-xl" 
                         required 
                       />
                     </div>
