@@ -1,0 +1,4 @@
+project_id = "xfvbtpaspzawholzbtoo"
+
+[functions.send-alert-email]
+verify_jwt = false

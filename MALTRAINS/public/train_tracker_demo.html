@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kerala Live Train Tracker</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: rgba(15, 23, 42, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        #map {
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Dark overlay for map to match application theme */
+        .leaflet-layer,
+        .leaflet-control-zoom-in,
+        .leaflet-control-zoom-out,
+        .leaflet-control-attribution {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+
+        /* Dashboard Panel */
+        .dashboard-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            width: 380px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .header .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .train-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
+        }
+
+        .train-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .train-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .train-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #fff;
+        }
+
+        .train-number {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .train-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .speed-value { color: var(--accent-green); }
+        .delay-value { color: #f59e0b; }
+
+        .location-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        /* Custom Map Markers */
+        .train-marker {
+            background: none;
+            border: none;
+        }
+        
+        .train-marker-inner {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-blue);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .train-marker.active .train-marker-inner {
+            background: var(--accent-green);
+            transform: scale(1.2);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+        }
+
+        .badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div class="dashboard-panel">
+        <div class="header">
+            <div class="pulse-dot"></div>
+            <h1>Live Operations Tracking <span class="badge">Kerala SR</span></h1>
+        </div>
+
+        <!-- Train 1: Vande Bharat -->
+        <div class="train-card" id="card-train1" onclick="focusTrain('train1')">
+            <div class="train-header">
+                <div>
+                    <div class="train-name">Vande Bharat Express</div>
+                    <div class="location-text">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <span id="loc-train1">TVC -> ERS (En route)</span>
+                    </div>
+                </div>
+                <div class="train-number">20634</div>
+            </div>
+            <div class="train-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Current Speed</span>
+                    <span class="stat-value speed-value"><span id="speed-train1">0</span> km/h</span>
+                </div>
+                <div class="stat-box" style="text-align: right;">
+                    <span class="stat-label">Status</span>
+                    <span class="stat-value delay-value">On Time</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Train 2: MEMU -->
+        <div class="train-card" id="card-train2" onclick="focusTrain('train2')">
+            <div class="train-header">
+                <div>
+                    <div class="train-name">Ernakulam - Kollam MEMU</div>
+                    <div class="location-text">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        <span id="loc-train2">ERS -> QLN (En route)</span>
+                    </div>
+                </div>
+                <div class="train-number">06441</div>
+            </div>
+            <div class="train-stats">
+                <div class="stat-box">
+                    <span class="stat-label">Current Speed</span>
+                    <span class="stat-value speed-value"><span id="speed-train2">0</span> km/h</span>
+                </div>
+                <div class="stat-box" style="text-align: right;">
+                    <span class="stat-label">Status</span>
+                    <span class="stat-value delay-value" style="color: #ef4444;">+5 mins</span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="font-size: 0.7rem; color: rgba(255,255,255,0.4); text-align: center; margin-top: 10px;">
+            Simulated high-frequency GNSS tracking feed
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize Map centered on Kerala
+        const map = L.map('map', {
+            zoomControl: false // We'll position it manually or leave it off for a cleaner dashboard look
+        }).setView([9.5916, 76.5222], 9);
+
+        // Add standard OpenStreetMap tiles (CSS invert makes it dark mode)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.control.zoom({
+            position: 'bottomright'
+        }).addTo(map);
+
+        // Define Routes (Coordinates for Kerala)
+        // Trivandrum to Ernakulam Route (Vande Bharat)
+        const route1 = [
+            [8.5241, 76.9366], // Trivandrum
+            [8.8932, 76.5898], // Kollam
+            [9.1758, 76.5005], // Kayamkulam
+            [9.3175, 76.6146], // Chengannur
+            [9.5916, 76.5222], // Kottayam
+            [9.9816, 76.2999]  // Ernakulam
+        ];
+
+        // Ernakulam to Kollam Route via Alappuzha (MEMU)
+        const route2 = [
+            [9.9816, 76.2999], // Ernakulam
+            [9.7744, 76.3242], // Turavur
+            [9.6841, 76.3400], // Cherthala
+            [9.4981, 76.3388], // Alappuzha
+            [9.3245, 76.4423], // Harippad
+            [9.1758, 76.5005], // Kayamkulam
+            [8.8932, 76.5898]  // Kollam
+        ];
+
+        // Draw Route Lines with glowing effect
+        L.polyline(route1, {color: 'rgba(59, 130, 246, 0.4)', weight: 4, dashArray: '5, 10'}).addTo(map);
+        L.polyline(route2, {color: 'rgba(16, 185, 129, 0.4)', weight: 4, dashArray: '5, 10'}).addTo(map);
+
+        // Create Markers
+        const createIcon = (text) => {
+            return L.divIcon({
+                className: 'train-marker',
+                html: `<div class="train-marker-inner">${text}</div>`,
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+        };
+
+        const marker1 = L.marker(route1[0], {icon: createIcon('VB')}).addTo(map);
+        const marker2 = L.marker(route2[0], {icon: createIcon('M')}).addTo(map);
+
+        // State for Simulation
+        const state = {
+            train1: {
+                route: route1,
+                segment: 0,
+                progress: 0.3, // Starting midway
+                speed: 110, // Target speed km/h
+                currentSpeed: 110,
+                direction: 1 // 1 for forward, -1 for reverse
+            },
+            train2: {
+                route: route2,
+                segment: 2,
+                progress: 0.1,
+                speed: 65,
+                currentSpeed: 65,
+                direction: 1
+            }
+        };
+
+        // Helper to interpolate between two lat, lng points
+        function interpolate(p1, p2, fraction) {
+            return [
+                p1[0] + (p2[0] - p1[0]) * fraction,
+                p1[1] + (p2[1] - p1[1]) * fraction
+            ];
+        }
+
+        // Get approximate city name based on latitude (just for display simulation)
+        function getLocationName(lat, lon, routeType) {
+            if (routeType === 1) {
+                if (lat < 8.7) return "Near Trivandrum";
+                if (lat < 9.0) return "Near Kollam";
+                if (lat < 9.25) return "Near Kayamkulam";
+                if (lat < 9.45) return "Near Chengannur";
+                if (lat < 9.75) return "Near Kottayam";
+                return "Approaching Ernakulam";
+            } else {
+                if (lat > 9.8) return "Near Ernakulam";
+                if (lat > 9.6) return "Near Cherthala";
+                if (lat > 9.4) return "Near Alappuzha";
+                if (lat > 9.2) return "Near Harippad";
+                if (lat > 9.0) return "Near Kayamkulam";
+                return "Approaching Kollam";
+            }
+        }
+
+        let activeTrain = null;
+
+        window.focusTrain = function(trainId) {
+            // Remove active classes
+            document.getElementById('card-train1').style.border = '1px solid rgba(255,255,255,0.05)';
+            document.getElementById('card-train2').style.border = '1px solid rgba(255,255,255,0.05)';
+            document.getElementById(`card-${trainId}`).style.border = '1px solid var(--accent-blue)';
+            
+            activeTrain = trainId;
+            const t = state[trainId];
+            const p1 = t.route[t.segment];
+            const p2 = t.route[t.segment + 1] || p1;
+            const currentPos = interpolate(p1, p2, t.progress);
+            
+            map.flyTo(currentPos, 11, {
+                animate: true,
+                duration: 1.5
+            });
+        };
+
+        // Animation Loop
+        function updatePositions() {
+            // Add some noise to speed for realism
+            state.train1.currentSpeed = state.train1.speed + (Math.random() * 10 - 5);
+            state.train2.currentSpeed = state.train2.speed + (Math.random() * 8 - 4);
+            
+            // Update UI
+            document.getElementById('speed-train1').innerText = Math.round(state.train1.currentSpeed);
+            document.getElementById('speed-train2').innerText = Math.round(state.train2.currentSpeed);
+
+            // Calculate movement (progress step based on speed)
+            // Using a very small step to make it smooth but noticeable over time
+            const step1 = state.train1.currentSpeed * 0.000008 * state.train1.direction;
+            const step2 = state.train2.currentSpeed * 0.000015 * state.train2.direction;
+
+            // Move Train 1
+            state.train1.progress += step1;
+            if (state.train1.progress >= 1.0) {
+                state.train1.progress = 0;
+                state.train1.segment++;
+                if (state.train1.segment >= state.train1.route.length - 1) {
+                    state.train1.direction = -1; // turnaround
+                    state.train1.segment = state.train1.route.length - 2;
+                    state.train1.progress = 1.0;
+                }
+            } else if (state.train1.progress <= 0) {
+                state.train1.progress = 1.0;
+                state.train1.segment--;
+                if (state.train1.segment < 0) {
+                    state.train1.direction = 1;
+                    state.train1.segment = 0;
+                    state.train1.progress = 0;
+                }
+            }
+
+            // Move Train 2
+            state.train2.progress += step2;
+            if (state.train2.progress >= 1.0) {
+                state.train2.progress = 0;
+                state.train2.segment++;
+                if (state.train2.segment >= state.train2.route.length - 1) {
+                    state.train2.direction = -1;
+                    state.train2.segment = state.train2.route.length - 2;
+                    state.train2.progress = 1.0;
+                }
+            } else if (state.train2.progress <= 0) {
+                state.train2.progress = 1.0;
+                state.train2.segment--;
+                if (state.train2.segment < 0) {
+                    state.train2.direction = 1;
+                    state.train2.segment = 0;
+                    state.train2.progress = 0;
+                }
+            }
+
+            // Apply positions
+            const pos1 = interpolate(
+                state.train1.route[state.train1.segment], 
+                state.train1.route[state.train1.segment + 1], 
+                state.train1.progress
+            );
+            marker1.setLatLng(pos1);
+            document.getElementById('loc-train1').innerText = getLocationName(pos1[0], pos1[1], 1);
+
+            const pos2 = interpolate(
+                state.train2.route[state.train2.segment], 
+                state.train2.route[state.train2.segment + 1], 
+                state.train2.progress
+            );
+            marker2.setLatLng(pos2);
+            document.getElementById('loc-train2').innerText = getLocationName(pos2[0], pos2[1], 2);
+            
+            // If following a train, pan map slightly occasionally
+            if (activeTrain === 'train1' && Math.random() > 0.95) {
+                map.panTo(pos1, {animate: true, duration: 2});
+            } else if (activeTrain === 'train2' && Math.random() > 0.95) {
+                map.panTo(pos2, {animate: true, duration: 2});
+            }
+
+            requestAnimationFrame(updatePositions);
+        }
+
+        // Start Animation Loop once map is ready
+        setTimeout(() => {
+            updatePositions();
+            // Initially focus map to bounds
+            map.fitBounds([route1[0], route2[route2.length-1]], {padding: [50, 50]});
+        }, 1000);
+
+    </script>
+</body>
+</html>
