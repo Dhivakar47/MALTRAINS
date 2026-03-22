@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@react-leaflet/core": "^2.1.0",
+    "react-leaflet": "^4.2.1"
+  }
+}
