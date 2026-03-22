@@ -49,17 +49,17 @@ export const DashboardLayout = () => {
     return <LoginModal />;
   }
 
-  // Show profile setup if profile is missing or incomplete
-  const profileComplete = profile?.is_profile_complete === true;
-  if (!profileComplete) {
-    return (
-      <UserProfileSetup
-        onComplete={() => {
-          queryClient.invalidateQueries({ queryKey: ['user-profile', user?.id] });
-        }}
-      />
-    );
-  }
+  // Profile setup check bypassed so previous database users can enter directly without repeating details
+  // const profileComplete = profile?.is_profile_complete === true;
+  // if (!profileComplete) {
+  //   return (
+  //     <UserProfileSetup
+  //       onComplete={() => {
+  //         queryClient.invalidateQueries({ queryKey: ['user-profile', user?.id] });
+  //       }}
+  //     />
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
