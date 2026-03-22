@@ -8,10 +8,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Train } from 'lucide-react';
+import { useState } from 'react';
 
 export const DashboardLayout = () => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const queryClient = useQueryClient();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Check if user has a completed profile
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
@@ -60,11 +62,11 @@ export const DashboardLayout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Sidebar />
-      <div className="ml-64">
-        <DashboardHeader />
-        <main className="p-6">
+    <div className="min-h-screen bg-background overflow-x-hidden">
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      <div className="md:ml-64 min-h-screen flex flex-col transition-all duration-300 w-full md:w-[calc(100%-16rem)] max-w-full">
+        <DashboardHeader onMenuClick={() => setIsSidebarOpen(true)} />
+        <main className="flex-1 p-4 md:p-6 w-full max-w-full overflow-x-hidden">
           <Outlet />
         </main>
         <ChatbotPanel />

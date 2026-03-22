@@ -20,8 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { UserProfileView } from './UserProfileView';
 
-
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen, setIsOpen }: { isOpen?: boolean, setIsOpen?: (v: boolean) => void }) => {
   const { user, logout, role, isAdmin } = useAuth();
   const { t } = useTranslation();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -37,7 +36,19 @@ export const Sidebar = () => {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col border-r border-sidebar-border shadow-2xl z-50">
+    <>
+      {/* Mobile backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setIsOpen?.(false)}
+        />
+      )}
+      <aside className={cn(
+        "fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col border-r border-sidebar-border shadow-2xl z-50 transition-transform duration-300 ease-in-out",
+        !isOpen && "-translate-x-full",
+        "md:translate-x-0"
+      )}>
       {/* Logo */}
       <div className="p-8">
         <div className="flex items-center gap-3">
@@ -62,12 +73,13 @@ export const Sidebar = () => {
                 <li key={item.to}>
                   <RouterNavLink
                     to={item.to}
+                    onClick={() => setIsOpen?.(false)}
                     className={({ isActive }) =>
                       cn('sidebar-item', isActive && 'sidebar-item-active')
                     }
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.label}</span>
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="truncate">{item.label}</span>
                   </RouterNavLink>
                 </li>
               ))}
@@ -81,34 +93,37 @@ export const Sidebar = () => {
               <li>
                 <RouterNavLink
                   to="/admin-settings"
+                  onClick={() => setIsOpen?.(false)}
                   className={({ isActive }) =>
                     cn('sidebar-item', isActive && 'sidebar-item-active')
                   }
                 >
-                  <Settings className="w-5 h-5" />
-                  <span>{t('nav.settings')}</span>
+                  <Settings className="w-5 h-5 flex-shrink-0" />
+                  <span className="truncate">{t('nav.settings')}</span>
                 </RouterNavLink>
               </li>
               <li>
                 <RouterNavLink
                   to="/train-logs"
+                  onClick={() => setIsOpen?.(false)}
                   className={({ isActive }) =>
                     cn('sidebar-item', isActive && 'sidebar-item-active')
                   }
                 >
-                  <FileText className="w-5 h-5" />
-                  <span>{t('nav.trainLogs')}</span>
+                  <FileText className="w-5 h-5 flex-shrink-0" />
+                  <span className="truncate">{t('nav.trainLogs')}</span>
                 </RouterNavLink>
               </li>
               <li>
                 <RouterNavLink
                   to="/fitness-renewal"
+                  onClick={() => setIsOpen?.(false)}
                   className={({ isActive }) =>
                     cn('sidebar-item', isActive && 'sidebar-item-active')
                   }
                 >
-                  <ShieldCheck className="w-5 h-5" />
-                  <span>Fitness Renewal</span>
+                  <ShieldCheck className="w-5 h-5 flex-shrink-0" />
+                  <span className="truncate">Fitness Renewal</span>
                 </RouterNavLink>
               </li>
             </ul>
@@ -148,5 +163,6 @@ export const Sidebar = () => {
 
       <UserProfileView open={profileOpen} onClose={() => setProfileOpen(false)} />
     </aside>
+    </>
   );
 };

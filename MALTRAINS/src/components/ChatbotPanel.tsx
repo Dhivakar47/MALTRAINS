@@ -200,7 +200,7 @@ export const ChatbotPanel = () => {
                     <MessageSquare className="h-6 w-6" />
                 </Button>
             ) : (
-                <Card className="w-[400px] h-[600px] flex flex-col shadow-2xl border-primary/20 bg-background/95 backdrop-blur-sm animate-in slide-in-from-bottom-5">
+                <Card className="w-[calc(100vw-3rem)] sm:w-[400px] h-[75vh] sm:h-[600px] flex flex-col shadow-2xl border-primary/20 bg-background/95 backdrop-blur-sm animate-in slide-in-from-bottom-5">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b">
                         <div className="flex items-center space-x-2">
                             <div className="bg-primary/10 p-2 rounded-full">
